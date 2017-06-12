@@ -38,6 +38,8 @@ class Comment
 	*/
 	private $parentId;
 	
+	private $childrenComments;
+
 
     public function getId() {
         return $this->id;
@@ -79,6 +81,14 @@ class Comment
     }
 	public function setParentId($parentId) {
         $this->parentId = $parentId;
+        return $this;
+    }
+	
+	public function getChildrenComments() {
+        return $this->childrenComments;
+    }
+	public function setChildrenComments($childrenComments) {
+        $this->childrenComments = $childrenComments;
         return $this;
     }
 	

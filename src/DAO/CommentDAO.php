@@ -32,23 +32,41 @@ class CommentDAO extends DAO
         $result = $this->getDb()->fetchAll($sql, array($articleId));
 
         // Convert query result to an array of domain objects
-        $comments = array();
+        $allComments = array();
         foreach ($result as $row) {
             $comId = $row['com_id'];
-			$parentId = $row['parent_id'];
-            $comment = $this->buildDomainObject($row);
+			$comment = $this->buildDomainObject($row);
             // The associated article is defined for the constructed comment
             $comment->setArticle($article);
-            $comments[$comId] = $comment;
+            $allComments[$comId] = $comment;
         }
-		foreach ($comments as $k => $comment){
-			if($parentId != 0){
-				$comments[$parentId]->children[]= $comment;
-				unset($comments[$k]);
-			}
+		
+		$parentComments = array_filter($allComments, function($comment) {
+			return $comment->getParentId() === NULL;
+		});
+		
+		foreach ($parentComments as $key => $parentComment) {
+			$this->setChildrenComments($allComments, $parentComment);
 		}
-        return $comments;
+		
+		
+		
+		
+	
+        return $parentComments;
     }
+	
+	function setChildrenComments($allComments, $parentComment) {
+		$childrenComments = array_filter($allComments, function($comment) use ($parentComment) {
+			return $comment->getParentId() === $parentComment->getId();
+		});
+
+		$parentComment->setChildrenComments($childrenComments);
+
+		foreach ($childrenComments as $key => $childComment) {
+			$this->setChildrenComments($allComments, $childComment);
+		}
+	} 
 
     /**
      * Creates an Comment object based on a DB row.
